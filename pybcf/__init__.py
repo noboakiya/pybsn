@@ -16,57 +16,38 @@ ALIASES = {"switches":"/core/switch",
             "groups":"/core/aaa/group",
             "fabric":"/applications/bcf/info/summary/fabric"}
 
-class AttrDict(object):
-    __slots__ = ['_values']
-
-    def __init__(self, values=None):
-        object.__setattr__(self, "_values", {})
+class DataObject(object):
+    @staticmethod
+    def _from_json(values):
+        obj = DataObject()
         if values is not None:
             for k, v in values.items():
-                self[k] = v
+                setattr(obj, k.replace('-', '_'), v)
+        return obj
 
-    @staticmethod
-    def _key(k):
-        return k.replace("_", "-")
-
-    def keys(self):
-        return self._values.keys()
-
-    def __getattr__(self, k):
-        return self[k]
-
-    def __setattr__(self, k, v):
-        self[k] = v
-
-    def __getitem__(self, k):
-        return self._values[self._key(k)]
-
-    def __setitem__(self, k, v):
-        self._values[self._key(k)] = v
-
-    def __contains__(self, k):
-        return self._key(k) in self._values
-
-    def __repr__(self):
-        return self._values.__repr__()
-
-    def __str__(self):
-        return self._values.__str__()
+    def _to_json(self):
+        return { k.replace('_', '-'): getattr(self, k) for k in self }
 
     def __iter__(self):
-        return self._values.__iter__()
+        return (k for k in self.__dict__.__iter__() if not k.startswith('__'))
+
+    def __repr__(self):
+        return self._to_json().__repr__()
+
+    def __str__(self):
+        return self._to_json().__str__()
 
 class BCFJSONEncoder(json.JSONEncoder):
     def default(self, obj):
-        if isinstance(obj, AttrDict):
-            return obj._values
+        if isinstance(obj, DataObject):
+            return obj._to_json()
         return json.JSONEncoder.default(self, obj)
 
 def to_json(data):
     return json.dumps(data, cls=BCFJSONEncoder)
 
 def from_json(text):
-    return json.loads(text, object_hook=AttrDict)
+    return json.loads(text, object_hook=DataObject._from_json)
 
 class Node(object):
     def __init__(self, path, connection):
