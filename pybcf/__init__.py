@@ -39,7 +39,7 @@ class DataObject(object):
 
 class BCFJSONEncoder(json.JSONEncoder):
     def default(self, obj):
-        if isinstance(obj, DataObject):
+        if callable(getattr(obj, '_to_json_dict', None)):
             return obj._to_json_dict()
         return json.JSONEncoder.default(self, obj)
 
