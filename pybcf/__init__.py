@@ -18,36 +18,36 @@ ALIASES = {"switches":"/core/switch",
 
 class DataObject(object):
     @staticmethod
-    def _from_json(values):
+    def _from_json_dict(values):
         obj = DataObject()
         if values is not None:
             for k, v in values.items():
                 setattr(obj, k.replace('-', '_'), v)
         return obj
 
-    def _to_json(self):
+    def _to_json_dict(self):
         return { k.replace('_', '-'): getattr(self, k) for k in self }
 
     def __iter__(self):
         return (k for k in self.__dict__.__iter__() if not k.startswith('__'))
 
     def __repr__(self):
-        return self._to_json().__repr__()
+        return self._to_json_dict().__repr__()
 
     def __str__(self):
-        return self._to_json().__str__()
+        return self._to_json_dict().__str__()
 
 class BCFJSONEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, DataObject):
-            return obj._to_json()
+            return obj._to_json_dict()
         return json.JSONEncoder.default(self, obj)
 
 def to_json(data):
     return json.dumps(data, cls=BCFJSONEncoder)
 
 def from_json(text):
-    return json.loads(text, object_hook=DataObject._from_json)
+    return json.loads(text, object_hook=DataObject._from_json_dict)
 
 class Node(object):
     def __init__(self, path, connection):
