@@ -29,7 +29,7 @@ class DataObject(object):
         return { k.replace('_', '-'): getattr(self, k) for k in self }
 
     def __iter__(self):
-        return (k for k in self.__dict__.__iter__() if not k.startswith('__'))
+        return (k for k in self.__dict__ if not k.startswith('__'))
 
     def __repr__(self):
         return self._to_json_dict().__repr__()
